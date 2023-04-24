@@ -44,6 +44,11 @@ public class PlayerController : MonoBehaviour
     }
     private void FixedUpdate()
     {
+        movementHandler();
+    }
+
+    private void movementHandler()
+    {
         Vector3 dir = new Vector3(horizontal_value, 0f, vertical_value);
         Vector3 normalizedDir = dir.normalized;
         Vector3 targetSpeed = new Vector3(normalizedDir.x, 0f, normalizedDir.z) * walkPenalty;
@@ -60,10 +65,5 @@ public class PlayerController : MonoBehaviour
         rb.AddForce(Vector3.forward * friction * -rb.velocity.z);
 
         rb.AddForce(Vector3.down * currGravity);
-    }
-
-    private void movementHandler()
-    {
-
     }
 }
