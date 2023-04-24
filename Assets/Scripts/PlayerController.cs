@@ -5,18 +5,28 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
+    [Header("movement variables")]
     public float maxSpeed = 15f;
     public float acceleration = 3f;
     public float decceleration = 3f;
     public float friction = 5f;
     public float walkPenalty = 0.1f;
 
+    [Header("advanced variables")]
     public float jumpForce = 40f;
     public float baseGravity = 20f;
+    [SerializeField] LayerMask groundLayer;
+
+    public bool isGrounded;
+    private bool isWalking;
+    private bool isJumping;
+    private bool isFalling;
 
     private float horizontal_value;
     private float vertical_value;
-    public float currGravity = 0f;
+    private float currGravity;
+
+    private float groundDistance = 0.4f;
 
 
     private Rigidbody rb;
@@ -40,7 +50,8 @@ public class PlayerController : MonoBehaviour
             rb.velocity = new Vector3(rb.velocity.x, jumpForce, rb.velocity.z);
         }
         if (rb.velocity.y <= 0) currGravity = baseGravity;
-
+        CheckIfGrounded();
+        
     }
     private void FixedUpdate()
     {
@@ -59,11 +70,20 @@ public class PlayerController : MonoBehaviour
         else walkPenalty -= decceleration * Time.deltaTime;
 
         walkPenalty = Mathf.Clamp(walkPenalty, 0.1f, 1f);
-        Debug.Log(walkPenalty);
 
         rb.AddForce(Vector3.right * friction * -rb.velocity.x);
         rb.AddForce(Vector3.forward * friction * -rb.velocity.z);
 
         rb.AddForce(Vector3.down * currGravity);
+    }
+
+    private void CheckIfGrounded()
+    {
+        Vector3 boxCenter = transform.position;
+        Vector3 halfExtents = new Vector3(0.5f * transform.localScale.x, groundDistance, 0.5f * transform.localScale.z);
+        isGrounded = Physics.BoxCast(boxCenter,halfExtents,Vector3.down,out RaycastHit hitInfo,Quaternion.identity,transform.localScale.y + groundDistance,groundLayer);
+
+        Debug.DrawRay(transform.position, Vector3.down * (transform.localScale.y + groundDistance), isGrounded ? Color.green : Color.red);
+        Debug.DrawRay(hitInfo.point, hitInfo.normal, Color.blue);
     }
 }
