@@ -35,7 +35,6 @@ public class PlayerController : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
         currGravity = baseGravity;
-        
     }
 
     // Update is called once per frame
@@ -44,13 +43,15 @@ public class PlayerController : MonoBehaviour
         vertical_value = Input.GetAxis("Vertical");
         horizontal_value = Input.GetAxis("Horizontal");
 
-        if (Input.GetKey(KeyCode.Space))
+        if (Input.GetKey(KeyCode.Space) && isGrounded)
         {
             currGravity = baseGravity* 0.75f;
             rb.velocity = new Vector3(rb.velocity.x, jumpForce, rb.velocity.z);
         }
         if (rb.velocity.y <= 0) currGravity = baseGravity;
         CheckIfGrounded();
+        //CheckIfWalking();
+
         
     }
     private void FixedUpdate()
@@ -85,5 +86,16 @@ public class PlayerController : MonoBehaviour
 
         Debug.DrawRay(transform.position, Vector3.down * (transform.localScale.y + groundDistance), isGrounded ? Color.green : Color.red);
         Debug.DrawRay(hitInfo.point, hitInfo.normal, Color.blue);
+    }
+    private void CheckIfWalking()
+    {
+        if(Mathf.Abs(horizontal_value) > 0 || Mathf.Abs(vertical_value) > 0)
+        {
+            isWalking = true;
+        }
+        else
+        {
+            isWalking = false;
+        }
     }
 }
