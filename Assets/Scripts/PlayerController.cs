@@ -108,6 +108,9 @@ public class PlayerController : MonoBehaviour
     {
         // cast a box that checks if player is grounded
         Vector3 boxCenter = transform.position;
+        //set the box to start from the middle of the player
+        boxCenter.y = boxCenter.y + 0.5f * transform.localScale.y;
+
         Vector3 halfExtents = new Vector3(0.5f * transform.localScale.x, groundDistance, 0.5f * transform.localScale.z);
         isGrounded = Physics.BoxCast(boxCenter,halfExtents,Vector3.down,out RaycastHit hitInfo,Quaternion.identity,transform.localScale.y + groundDistance,groundLayer);
 
