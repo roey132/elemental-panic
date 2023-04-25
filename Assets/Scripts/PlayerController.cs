@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.Animations;
 
 public class PlayerController : MonoBehaviour
 {
@@ -17,16 +18,20 @@ public class PlayerController : MonoBehaviour
     public float baseGravity = 20f;
     [SerializeField] LayerMask groundLayer;
 
-    private bool isGrounded;
+    [Header("indicators")]
+    public bool isGrounded;
     private bool isWalking;
-    private bool isJumping;
+    public bool isJumping;
     private bool isFalling;
+    private bool isTouchingWall;
+    private bool isWallSliding;
+    private bool isWallJumping;
 
-    private float horizontal_value;
-    private float vertical_value;
-    private float currGravity;
+    public float horizontal_value;
+    public float vertical_value;
+    public float currGravity;
 
-    private float groundDistance = 0.2f;
+    private float groundDistance = 0.1f;
 
 
     private Rigidbody rb;
@@ -44,11 +49,41 @@ public class PlayerController : MonoBehaviour
         vertical_value = Input.GetAxis("Vertical");
         horizontal_value = Input.GetAxis("Horizontal");
 
-        // handle jumping
-        if (Input.GetKey(KeyCode.Space) && isGrounded)
+        handleJumping();
+
+        CheckIfGrounded();
+
+        CheckIfWalking();
+
+        handleRotation();
+
+        isOnWall();
+
+        wallSlidingHandler();
+
+    }
+    private void FixedUpdate()
+    {
+
+        walkHandler();
+        applyGravity();
+    }
+    private void handleJumping()
+    {
+        if (Input.GetKeyDown(KeyCode.Space) && isGrounded && !isWallSliding)
         {
-            currGravity = baseGravity* 0.75f;
+            currGravity = baseGravity * 0.75f;
             rb.velocity = new Vector3(rb.velocity.x, jumpForce, rb.velocity.z);
+            isJumping = true;
+        }
+        if (Input.GetKeyDown(KeyCode.Space) && isTouchingWall && !isGrounded)
+        {
+            currGravity = baseGravity * 0.75f;
+            Vector3 backward = transform.forward * -1f;
+            backward = backward * jumpForce * 3;
+            backward.y = jumpForce * 1.1f;
+            rb.velocity = backward;
+            
             isJumping = true;
         }
 
@@ -57,26 +92,17 @@ public class PlayerController : MonoBehaviour
         {
             currGravity = baseGravity;
             isJumping = false;
-            isFalling = true;
-        } 
+        }
 
-        // handle isFalling variable
-        if (isGrounded)
+        if (rb.velocity.y < 0)
+        {
+            isFalling = true;
+        }
+        else
         {
             isFalling = false;
         }
-
-        CheckIfGrounded();
-
-        CheckIfWalking();
-
-        
     }
-    private void FixedUpdate()
-    {
-        walkHandler();
-    }
-
     private void walkHandler()
     {
         // calculate the direction vector for movement
@@ -100,10 +126,13 @@ public class PlayerController : MonoBehaviour
         rb.AddForce(Vector3.right * friction * -rb.velocity.x);
         rb.AddForce(Vector3.forward * friction * -rb.velocity.z);
 
+    }
+    private void applyGravity()
+    {
         // apply gravity
+        if (!isWallSliding)
         rb.AddForce(Vector3.down * currGravity);
     }
-
     private void CheckIfGrounded()
     {
         // cast a box that checks if player is grounded
@@ -112,10 +141,10 @@ public class PlayerController : MonoBehaviour
         boxCenter.y = boxCenter.y + 0.5f * transform.localScale.y;
 
         Vector3 halfExtents = new Vector3(0.5f * transform.localScale.x, groundDistance, 0.5f * transform.localScale.z);
-        isGrounded = Physics.BoxCast(boxCenter,halfExtents,Vector3.down,out RaycastHit hitInfo,Quaternion.identity,transform.localScale.y + groundDistance,groundLayer);
+        isGrounded = Physics.BoxCast(boxCenter,halfExtents,Vector3.down,out RaycastHit hitInfo,Quaternion.identity,transform.localScale.y * 0.5f + groundDistance,groundLayer);
 
         // cast debug rays to indicate isGrounded
-        Debug.DrawRay(transform.position, Vector3.down * (transform.localScale.y + groundDistance), isGrounded ? Color.green : Color.red);
+        Debug.DrawRay(boxCenter, Vector3.down * (transform.localScale.y + groundDistance), isGrounded ? Color.green : Color.red);
         Debug.DrawRay(hitInfo.point, hitInfo.normal, Color.blue);
     }
     private void CheckIfWalking()
@@ -129,5 +158,40 @@ public class PlayerController : MonoBehaviour
         {
             isWalking = false;
         }
+    }
+    public void handleRotation()
+    {
+        // calculate the angle to face forward
+        float angle = Mathf.Atan2(horizontal_value, vertical_value) * Mathf.Rad2Deg;
+
+        // apply the angle to the player rotation
+        if (horizontal_value != 0 && vertical_value != 0)
+        {
+            transform.rotation = Quaternion.Euler(new Vector3(0f, angle, 0f));
+        }
+    }
+    public void isOnWall()
+    {
+        Vector3 playerCenter = transform.position;
+        playerCenter.y = transform.position.y + transform.localScale.y * 0.5f;
+        isTouchingWall = Physics.Raycast(playerCenter, transform.forward, transform.localScale.x * 0.5f + 0.1f,groundLayer);
+        Debug.DrawRay(playerCenter, transform.forward, isTouchingWall ? Color.green : Color.red);
+    }
+    public void wallSlidingHandler()
+    {
+        if (isTouchingWall && !isGrounded && !isWallSliding && !isJumping)
+        {
+            isWallSliding = true;
+        }
+        else
+        {
+            isWallSliding = false;
+        }
+        if (isWallSliding && !isGrounded && !isJumping)
+        {
+            rb.velocity = new Vector3(0f, -5f, 0f);
+        }
+
+
     }
 }
