@@ -6,6 +6,9 @@ using UnityEngine.Animations;
 
 public class PlayerController : MonoBehaviour
 {
+    Animator animator;
+    public float rotationSpeed;
+
     [Header("movement variables")]
     public float maxSpeed = 15f;
     public float acceleration = 3f;
@@ -38,6 +41,7 @@ public class PlayerController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        animator = GetComponent<Animator>();
         rb = GetComponent<Rigidbody>();
         currGravity = baseGravity;
     }
@@ -45,6 +49,22 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+         //simple animation activation
+        if (isWalking == true){
+            animator.SetBool("isWalking", true);
+        }
+        if (isWalking == false){
+            animator.SetBool("isWalking", false);
+        }
+        if (isJumping == true){
+            animator.SetInteger("isJumping",1);
+        }
+        if (isJumping == false && isWalking == false){
+            animator.SetInteger("isJumping",2);
+        }
+        if (isJumping == false && isWalking == true){
+            animator.SetInteger("isJumping",3);
+        }
         // set up vertical and horizontal values to handle movement
         vertical_value = Input.GetAxis("Vertical");
         horizontal_value = Input.GetAxis("Horizontal");
@@ -161,13 +181,12 @@ public class PlayerController : MonoBehaviour
     }
     public void handleRotation()
     {
-        // calculate the angle to face forward
-        float angle = Mathf.Atan2(horizontal_value, vertical_value) * Mathf.Rad2Deg;
+         Vector3 movementDirection = new Vector3(horizontal_value, 0, vertical_value);
 
-        // apply the angle to the player rotation
-        if (horizontal_value != 0 && vertical_value != 0)
+        if (movementDirection != Vector3.zero)
         {
-            transform.rotation = Quaternion.Euler(new Vector3(0f, angle, 0f));
+            Quaternion toRotation = Quaternion.LookRotation(movementDirection, Vector3.up);
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, toRotation, rotationSpeed * Time.deltaTime);            
         }
     }
     public void isOnWall()
