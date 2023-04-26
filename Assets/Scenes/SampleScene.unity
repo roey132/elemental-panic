@@ -658,6 +658,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0a5ec12342f8276489ff11a88b428593, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rotationSpeed: 0
   maxSpeed: 60
   acceleration: 5
   decceleration: 5
@@ -706,6 +707,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0a5ec12342f8276489ff11a88b428593, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rotationSpeed: 720
   maxSpeed: 60
   acceleration: 5
   decceleration: 5
@@ -900,6 +902,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7413344840680693326, guid: cc91c8ba8b9a34f4d99e70d721f60b64, type: 3}
       propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7413344840680693326, guid: cc91c8ba8b9a34f4d99e70d721f60b64, type: 3}
+      propertyPath: m_ApplyRootMotion
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7647134206250791342, guid: cc91c8ba8b9a34f4d99e70d721f60b64, type: 3}
