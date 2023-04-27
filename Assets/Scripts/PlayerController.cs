@@ -18,6 +18,8 @@ public class PlayerController : MonoBehaviour
     [Header("advanced variables")]
     public float jumpForce = 15f;
     public float baseGravity = 60f;
+    public float wallJumpUpForce = 20f;
+    public float wallJumpBackForce = 20f;
     [SerializeField] LayerMask groundLayer;
 
     [Header("indicators")]
@@ -124,8 +126,9 @@ public class PlayerController : MonoBehaviour
         {
             currGravity = baseGravity * 0.75f;
             Vector3 backward = transform.forward * -1f;
-            backward = backward * jumpForce * 3;
-            backward.y = jumpForce * 1.1f;
+            backward = backward * wallJumpUpForce;
+            backward.y = wallJumpUpForce;
+            Input.ResetInputAxes();
             rb.velocity = backward;
             
             isJumping = true;
