@@ -1,29 +1,28 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Animations;
 
 public class PlayerController : MonoBehaviour
 {
-    Animator animator;
-    public float rotationSpeed;
-
     [Header("movement variables")]
-    public float maxSpeed = 15f;
-    public float acceleration = 3f;
-    public float decceleration = 3f;
-    public float friction = 5f;
+    public float maxSpeed = 60f;
+    public float acceleration = 5f;
+    public float decceleration = 5f;
+    public float friction = 8f;
     public float walkPenalty = 0.1f;
 
     [Header("advanced variables")]
-    public float jumpForce = 40f;
-    public float baseGravity = 20f;
+    public float jumpForce = 15f;
+    public float baseGravity = 60f;
     [SerializeField] LayerMask groundLayer;
 
     [Header("indicators")]
     public bool isGrounded;
-    private bool isWalking;
+    public bool isWalking;
     public bool isJumping;
     private bool isFalling;
     private bool isTouchingWall;
@@ -34,8 +33,18 @@ public class PlayerController : MonoBehaviour
     public float vertical_value;
     public float currGravity;
 
-    private float groundDistance = 0.1f;
+    [Header("dash variables")]
+    public float dashSpeed = 25f;
+    public float dashDuration = 0.1f;
+    public bool canDash = false;
+    public bool isDashing = false;
+    public float dashCooldown = 2f;
 
+    [Header("animations")]
+    Animator animator;
+    public float rotationSpeed;
+
+    private float groundDistance = 0.1f;
 
     private Rigidbody rb;
     // Start is called before the first frame update
@@ -49,25 +58,15 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-         //simple animation activation
-        if (isWalking == true){
-            animator.SetBool("isWalking", true);
-        }
-        if (isWalking == false){
-            animator.SetBool("isWalking", false);
-        }
-        if (isJumping == true){
-            animator.SetInteger("isJumping",1);
-        }
-        if (isJumping == false && isWalking == false){
-            animator.SetInteger("isJumping",2);
-        }
-        if (isJumping == false && isWalking == true){
-            animator.SetInteger("isJumping",3);
-        }
+        if (isDashing) return;
+
         // set up vertical and horizontal values to handle movement
         vertical_value = Input.GetAxis("Vertical");
         horizontal_value = Input.GetAxis("Horizontal");
+
+        animationHandler();
+
+        handleDash();
 
         handleJumping();
 
@@ -81,12 +80,37 @@ public class PlayerController : MonoBehaviour
 
         wallSlidingHandler();
 
+
     }
     private void FixedUpdate()
     {
-
+        if (isDashing) return;
         walkHandler();
         applyGravity();
+    }
+    private void animationHandler()
+    {
+        //simple animation activation
+        if (isWalking == true)
+        {
+            animator.SetBool("isWalking", true);
+        }
+        if (isWalking == false)
+        {
+            animator.SetBool("isWalking", false);
+        }
+        if (isJumping == true)
+        {
+            animator.SetInteger("isJumping", 1);
+        }
+        if (isJumping == false && isWalking == false)
+        {
+            animator.SetInteger("isJumping", 2);
+        }
+        if (isJumping == false && isWalking == true)
+        {
+            animator.SetInteger("isJumping", 3);
+        }
     }
     private void handleJumping()
     {
@@ -143,8 +167,12 @@ public class PlayerController : MonoBehaviour
         walkPenalty = Mathf.Clamp(walkPenalty, 0.1f, 1f);
 
         // apply friction
-        rb.AddForce(Vector3.right * friction * -rb.velocity.x);
-        rb.AddForce(Vector3.forward * friction * -rb.velocity.z);
+        if (!isDashing)
+        {
+            rb.AddForce(Vector3.right * friction * -rb.velocity.x);
+            rb.AddForce(Vector3.forward * friction * -rb.velocity.z);
+        }
+
 
     }
     private void applyGravity()
@@ -181,7 +209,7 @@ public class PlayerController : MonoBehaviour
     }
     public void handleRotation()
     {
-         Vector3 movementDirection = new Vector3(horizontal_value, 0, vertical_value);
+        Vector3 movementDirection = new Vector3(horizontal_value, 0, vertical_value);
 
         if (movementDirection != Vector3.zero)
         {
@@ -212,5 +240,22 @@ public class PlayerController : MonoBehaviour
         }
 
 
+    }
+    private void handleDash()
+    {
+        if (Input.GetKeyDown(KeyCode.F) && canDash) StartCoroutine(dash());
+
+        if (isGrounded) canDash = true;
+    }
+    private IEnumerator dash()
+    {
+        float gravityHolder = currGravity;
+        currGravity = 0;
+        isDashing = true;
+        canDash = false;
+        rb.velocity = transform.forward * dashSpeed;
+        yield return new WaitForSeconds(dashDuration);
+        currGravity = gravityHolder;
+        isDashing = false;
     }
 }
