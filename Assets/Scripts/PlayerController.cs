@@ -181,7 +181,7 @@ public class PlayerController : MonoBehaviour
     private void applyGravity()
     {
         // apply gravity
-        if (!isWallSliding)
+        if (!isWallSliding && !isGrounded)
         rb.AddForce(Vector3.down * currGravity);
     }
     private void CheckIfGrounded()
